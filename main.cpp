@@ -289,7 +289,7 @@ std::array<std::vector<std::string>, 2> input_list(std::filesystem::path path)
 
     std::array<std::vector<std::string>, 2> wire_points;
 
-    for(int64_t wire = 0; wire < wires.size(); wire++)
+    for(size_t wire = 0; wire < wires.size(); wire++)
     {
         std::stringstream wire_map(wires[wire]);
 
@@ -302,7 +302,6 @@ std::array<std::vector<std::string>, 2> input_list(std::filesystem::path path)
 
     return wire_points;
 }
-
 
 } // namespace wire_line
 
@@ -317,7 +316,7 @@ int main()
     answers.push_back(fuel::total_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
     answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/02-program_integers.txt"), {12, 2}));
     answers.push_back(intcode::instruction_solver(get_input_list<int64_t>("inputs/02-program_integers.txt"), 19690720));
-    answers.push_back(wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).sum());
+    answers.push_back("takes too long to execute so I comment"/*wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).sum()*/);
 
     std::ofstream writer("output.txt");
     for(uint16_t part = 0; part < answers.size(); ++part)
