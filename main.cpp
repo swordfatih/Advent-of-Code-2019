@@ -172,12 +172,12 @@ int main()
 
 
     std::ofstream writer("output.txt");
-    for(uint16_t day = 0; day < answers.size(); ++day)
+    for(uint16_t part = 0; part < answers.size(); ++part)
     {
-        std::visit([&day, &writer](auto&& answer)
+        std::visit([&part, &writer](auto&& answer)
         {
             std::stringstream output;
-            output << day + 1 << "/12: " << answer;
+            output << "Part " << part + 1 << ": " << answer;
 
             std::cout << output.str() << std::endl;
 
@@ -185,7 +185,7 @@ int main()
             {
                 writer << output.str() << '\n';
             }
-        }, answers[day]);
+        }, answers[part]);
     }
 
     if(writer)
