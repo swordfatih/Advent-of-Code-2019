@@ -13,12 +13,25 @@
 template <typename Type>
 std::vector<Type> get_input_list(std::filesystem::path path)
 {
-    if(path.exists())
+    std::vector<Type> input_list;
+
+    if(std::filesystem::exists(path))
     {
-        return {};
+        return input_list;
     }
 
     std::ifstream reader(path);
+
+    if(reader)
+    {
+        std::string input_token;
+        while(reader >> input_token)
+        {
+            input_list.push_back(std::stoi(input_token));
+        }
+
+        reader.close();
+    }
 }
 
 
@@ -27,6 +40,11 @@ std::vector<Type> get_input_list(std::filesystem::path path)
 /////////////////////////////////////////////////
 uint32_t mass_calculator(std::vector<uint32_t> inputs)
 {
+    if(inputs.empty())
+    {
+        return 0;
+    }
+
     uint32_t result = 0;
 
     for(auto mass: inputs)
@@ -34,7 +52,6 @@ uint32_t mass_calculator(std::vector<uint32_t> inputs)
         result += std::floor(mass / 3) - 2;
     }
 }
-
 
 
 /////////////////////////////////////////////////
