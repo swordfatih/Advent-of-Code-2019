@@ -376,7 +376,63 @@ int64_t criteria_count(Vector2<int64_t> range)
 
         if(current_number <= range.y && same_digits)
         {
-            std::cout << current_number << std::endl;
+            count++;
+        }
+
+        current_number++;
+    }
+
+    return count;
+}
+
+/////////////////////////////////////////////////
+int64_t group_criteria_count(Vector2<int64_t> range)
+{
+    int64_t minimal_number = range.x;
+    int64_t current_number = minimal_number;
+
+    int64_t count = 0;
+
+    while(current_number < range.y)
+    {
+        bool same_digits = false;
+
+        auto digits = std::to_string(current_number);
+        for(size_t character = 0; character < digits.size() - 1; ++character)
+        {
+            if(digits[character] - '0' > digits[character + 1] - '0')
+            {
+                digits[character + 1] = digits[character];
+            }
+        }
+
+        for(size_t character = 0; character < digits.size() - 1; ++character)
+        {
+            if(digits[character] == digits[character + 1])
+            {
+                same_digits = true;
+
+                if(character > 0 && digits[character - 1] == digits[character])
+                {
+                    same_digits = false;
+                }
+
+                if(character < digits.size() - 1 && digits[character + 2] == digits[character])
+                {
+                    same_digits = false;
+                }
+
+                if(same_digits)
+                {
+                    break;
+                }
+            }
+        }
+
+        current_number = std::stoi(digits);
+
+        if(current_number <= range.y && same_digits)
+        {
             count++;
         }
 
@@ -402,6 +458,7 @@ int main()
     answers.push_back("too long"/*wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).standard()*/);
     answers.push_back("too long"/*wire_line::fewest_combined_steps(wire_line::input_list("inputs/03-wire-maps.txt")).standard()*/);
     answers.push_back(password::criteria_count({372304, 847060}));
+    answers.push_back(password::group_criteria_count({372304, 847060}));
 
     std::ofstream writer("output.txt");
     for(uint16_t part = 0; part < answers.size(); ++part)
