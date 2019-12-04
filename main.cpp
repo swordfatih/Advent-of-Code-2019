@@ -199,9 +199,9 @@ int64_t instruction_solver(std::vector<int64_t> inputs, int64_t code)
 {
     Sentence instructions;
 
-    for(instructions.noun = 0; instructions.noun <= 99; instructions.noun++)
+    for(instructions.noun = 0; instructions.noun <= 99; ++instructions.noun)
     {
-        for(instructions.verb = 0; instructions.verb <= 99; instructions.verb++)
+        for(instructions.verb = 0; instructions.verb <= 99; ++instructions.verb)
         {
             if(program_caller(inputs, instructions) == code)
             {
@@ -344,6 +344,51 @@ std::array<std::vector<std::string>, 2> input_list(std::filesystem::path path)
 } // namespace wire_line
 
 /////////////////////////////////////////////////
+namespace password
+{
+/////////////////////////////////////////////////
+int64_t criteria_count(Vector2<int64_t> range)
+{
+    int64_t minimal_number = range.x;
+    int64_t current_number = minimal_number;
+
+    int64_t count = 0;
+
+    while(current_number < range.y)
+    {
+        bool same_digits = false;
+
+        auto digits = std::to_string(current_number);
+        for(size_t character = 0; character < digits.size() - 1; ++character)
+        {
+            if(digits[character] - '0' > digits[character + 1] - '0')
+            {
+                digits[character + 1] = digits[character];
+            }
+
+            if(digits[character] == digits[character + 1])
+            {
+                same_digits = true;
+            }
+        }
+
+        current_number = std::stoi(digits);
+
+        if(current_number <= range.y && same_digits)
+        {
+            std::cout << current_number << std::endl;
+            count++;
+        }
+
+        current_number++;
+    }
+
+    return count;
+}
+
+} // namespace password
+
+/////////////////////////////////////////////////
 // Main stream
 /////////////////////////////////////////////////
 int main()
@@ -354,8 +399,9 @@ int main()
     answers.push_back(fuel::total_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
     answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/02-program_integers.txt"), {12, 2}));
     answers.push_back(intcode::instruction_solver(get_input_list<int64_t>("inputs/02-program_integers.txt"), 19690720));
-    answers.push_back(wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).standard());
-    answers.push_back(wire_line::fewest_combined_steps(wire_line::input_list("inputs/03-wire-maps.txt")).standard());
+    answers.push_back("too long"/*wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).standard()*/);
+    answers.push_back("too long"/*wire_line::fewest_combined_steps(wire_line::input_list("inputs/03-wire-maps.txt")).standard()*/);
+    answers.push_back(password::criteria_count({372304, 847060}));
 
     std::ofstream writer("output.txt");
     for(uint16_t part = 0; part < answers.size(); ++part)
