@@ -28,7 +28,14 @@ std::vector<Type> get_input_list(std::filesystem::path path)
         std::string input_token;
         while(reader >> input_token)
         {
-            input_list.push_back(std::stoi(input_token));
+            if constexpr(std::is_same<Type, int64_t>::value || std::is_same<Type, int32_t>::value || std::is_same<Type, int16_t>::value || std::is_same<Type, int>::value)
+            {
+                input_list.push_back(std::stoi(input_token));
+            }
+            else
+            {
+                input_list.push_back(input_token);
+            }
         }
 
         reader.close();
@@ -44,20 +51,63 @@ std::vector<Type> get_input_list(std::filesystem::path path)
 /////////////////////////////////////////////////
 struct Sentence
 {
+    /////////////////////////////////////////////////
     int64_t noun = 0;
     int64_t verb = 0;
 };
 
 /////////////////////////////////////////////////
+/// \brief Struct representing a vector or a point
+/// by its coordinates in a 2D dimension
+///
+/////////////////////////////////////////////////
+template <typename Type>
+struct Vector2
+{
+    /////////////////////////////////////////////////
+    Type x;
+    Type y;
+
+    /////////////////////////////////////////////////
+    Type sum()
+    {
+        return x + y;
+    }
+
+    /////////////////////////////////////////////////
+    bool operator==(const Vector2& another_vector)
+    {
+        return (x == another_vector.x && y == another_vector.y);
+    }
+};
+
+/////////////////////////////////////////////////
+/// \brief Struct representing a vector or a point
+/// by its coordinates in a 3D dimension
+///
+/////////////////////////////////////////////////
+template <typename Type>
+struct Vector3
+{
+    /////////////////////////////////////////////////
+    Type x;
+    Type y;
+    Type z;
+};
+
+/////////////////////////////////////////////////
 // Challenges
 /////////////////////////////////////////////////
-int64_t fuel_calculator(int64_t mass)
+namespace fuel
+{
+/////////////////////////////////////////////////
+int64_t calculator(int64_t mass)
 {
     return std::floor(mass / 3) - 2;
 }
 
 /////////////////////////////////////////////////
-int64_t fuel_requirement(std::vector<int64_t> inputs)
+int64_t requirement(std::vector<int64_t> inputs)
 {
     if(inputs.empty())
     {
@@ -68,14 +118,14 @@ int64_t fuel_requirement(std::vector<int64_t> inputs)
 
     for(const auto& mass: inputs)
     {
-        fuel += fuel_calculator(mass);
+        fuel += calculator(mass);
     }
 
     return fuel;
 }
 
 /////////////////////////////////////////////////
-int64_t total_fuel_requirement(std::vector<int64_t> inputs)
+int64_t total_requirement(std::vector<int64_t> inputs)
 {
     if(inputs.empty())
     {
@@ -90,7 +140,7 @@ int64_t total_fuel_requirement(std::vector<int64_t> inputs)
 
         while(remaining_mass > 0)
         {
-            remaining_mass = fuel_calculator(remaining_mass);
+            remaining_mass = calculator(remaining_mass);
 
             if(remaining_mass > 0)
             {
@@ -102,8 +152,13 @@ int64_t total_fuel_requirement(std::vector<int64_t> inputs)
     return fuel;
 }
 
+} // namespace fuel
+
 /////////////////////////////////////////////////
-std::vector<int64_t> intcode_program_translater(std::vector<int64_t> inputs)
+namespace intcode
+{
+/////////////////////////////////////////////////
+std::vector<int64_t> program_translater(std::vector<int64_t> inputs)
 {
     int64_t read_position = 0;
 
@@ -130,17 +185,17 @@ std::vector<int64_t> intcode_program_translater(std::vector<int64_t> inputs)
 }
 
 /////////////////////////////////////////////////
-int64_t intcode_program_caller(std::vector<int64_t> inputs, Sentence instructions)
+int64_t program_caller(std::vector<int64_t> inputs, Sentence instructions)
 {
     //Initialization
     inputs[1] = instructions.noun;
     inputs[2] = instructions.verb;
 
-    return intcode_program_translater(inputs)[0];
+    return program_translater(inputs)[0];
 }
 
 /////////////////////////////////////////////////
-int64_t intcode_instruction_solver(std::vector<int64_t> inputs, int64_t code)
+int64_t instruction_solver(std::vector<int64_t> inputs, int64_t code)
 {
     Sentence instructions;
 
@@ -148,7 +203,7 @@ int64_t intcode_instruction_solver(std::vector<int64_t> inputs, int64_t code)
     {
         for(instructions.verb = 0; instructions.verb <= 99; instructions.verb++)
         {
-            if(intcode_program_caller(inputs, instructions) == code)
+            if(program_caller(inputs, instructions) == code)
             {
                 return 100 * instructions.noun + instructions.verb;
             }
@@ -158,6 +213,99 @@ int64_t intcode_instruction_solver(std::vector<int64_t> inputs, int64_t code)
     return 0;
 }
 
+} // namespace intcode
+
+/////////////////////////////////////////////////
+namespace wire_line
+{
+/////////////////////////////////////////////////
+std::vector<Vector2<int64_t>> definer(std::vector<std::string> inputs)
+{
+    std::vector<Vector2<int64_t>> points;
+
+    Vector2<int64_t> reading_position = {0, 0};
+
+    for(auto next: inputs)
+    {
+        char direction = next[0];
+        int64_t max_step = std::stoi(next.erase(0, 1));
+
+        for(int64_t step = 0; step < max_step; ++step)
+        {
+            switch(direction)
+            {
+            case 'L':
+                reading_position.x -= 1;
+                break;
+            case 'U':
+                reading_position.y -= 1;
+                break;
+            case 'R':
+                reading_position.x += 1;
+                break;
+            case 'D':
+                reading_position.y += 1;
+                break;
+            default:
+                break;
+            }
+
+            points.push_back(reading_position);
+        }
+    }
+
+    return points;
+}
+
+/////////////////////////////////////////////////
+Vector2<int64_t> closest_intersection(std::array<std::vector<std::string>, 2> wires)
+{
+    Vector2<int64_t> closest_wire = {0, 0};
+
+    auto&& first_wire = definer(wires.front());
+    auto&& second_wire = definer(wires.back());
+
+    for(auto first_wire_point: first_wire)
+    {
+        for(auto second_wire_point: second_wire)
+        {
+            if(first_wire_point == second_wire_point)
+            {
+                if((closest_wire.x == 0 && closest_wire.y == 0) || (std::abs(first_wire_point.x) + std::abs(first_wire_point.y) < closest_wire.x + closest_wire.y))
+                {
+                    closest_wire = {std::abs(first_wire_point.x), std::abs(first_wire_point.y)};
+                }
+            }
+        }
+    }
+
+    return closest_wire;
+}
+
+/////////////////////////////////////////////////
+std::array<std::vector<std::string>, 2> input_list(std::filesystem::path path)
+{
+    std::vector<std::string> wires = get_input_list<std::string>(path);
+
+    std::array<std::vector<std::string>, 2> wire_points;
+
+    for(int64_t wire = 0; wire < wires.size(); wire++)
+    {
+        std::stringstream wire_map(wires[wire]);
+
+        std::string token;
+        while(std::getline(wire_map, token, ','))
+        {
+            wire_points[wire].push_back(token);
+        }
+    }
+
+    return wire_points;
+}
+
+
+} // namespace wire_line
+
 /////////////////////////////////////////////////
 // Main stream
 /////////////////////////////////////////////////
@@ -165,11 +313,11 @@ int main()
 {
     std::vector<std::variant<std::string, int64_t>> answers;
 
-    answers.push_back(fuel_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
-    answers.push_back(total_fuel_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
-    answers.push_back(intcode_program_caller(get_input_list<int64_t>("inputs/02-program_integers.txt"), {12, 2}));
-    answers.push_back(intcode_instruction_solver(get_input_list<int64_t>("inputs/02-program_integers.txt"), 19690720));
-
+    answers.push_back(fuel::requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
+    answers.push_back(fuel::total_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
+    answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/02-program_integers.txt"), {12, 2}));
+    answers.push_back(intcode::instruction_solver(get_input_list<int64_t>("inputs/02-program_integers.txt"), 19690720));
+    answers.push_back(wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).sum());
 
     std::ofstream writer("output.txt");
     for(uint16_t part = 0; part < answers.size(); ++part)
