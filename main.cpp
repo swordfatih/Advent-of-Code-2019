@@ -92,6 +92,43 @@ int64_t total_fuel_requirement(std::vector<int64_t> inputs)
 }
 
 /////////////////////////////////////////////////
+std::vector<int64_t> intcode_program_translater(std::vector<int64_t> inputs)
+{
+    int64_t read_position = 0;
+
+    bool done = false;
+    while(!done)
+    {
+        if(inputs[read_position] == 1)
+        {
+            inputs[inputs[read_position + 3]] = inputs[inputs[read_position + 1]] + inputs[inputs[read_position + 2]];
+        }
+        else if(inputs[read_position] == 2)
+        {
+            inputs[inputs[read_position + 3]] = inputs[inputs[read_position + 1]] * inputs[inputs[read_position + 2]];
+        }
+        else if(inputs[read_position] == 99)
+        {
+            done = true;
+        }
+
+        read_position += 4;
+    }
+
+    return std::move(inputs);
+}
+
+/////////////////////////////////////////////////
+int64_t two_thousand_and_twelwe_program_alert(std::vector<int64_t> inputs)
+{
+    //Initialization
+    inputs[1] = 12;
+    inputs[2] = 2;
+
+    return intcode_program_translater(inputs)[0];
+}
+
+/////////////////////////////////////////////////
 // Main stream
 /////////////////////////////////////////////////
 int main()
@@ -100,6 +137,7 @@ int main()
 
     answers.push_back(fuel_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
     answers.push_back(total_fuel_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
+    answers.push_back(two_thousand_and_twelwe_program_alert(get_input_list<int64_t>("inputs/02-program_integers.txt")));
 
     std::ofstream writer("output.txt");
     for(uint16_t day = 0; day < answers.size(); ++day)
