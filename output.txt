@@ -1,5 +1,6 @@
-Part 1: 3342351
-Part 2: 5010664
-Part 3: 3224742
-Part 4: 7960
-Part 5: takes too long to execute so I comment
+Part 1.0: 3342351
+Part 1.1: 5010664
+Part 2.0: 3224742
+Part 2.1: 7960
+Part 3.0: 896
+Part 3.1: 16524

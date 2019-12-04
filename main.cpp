@@ -69,9 +69,9 @@ struct Vector2
     Type y;
 
     /////////////////////////////////////////////////
-    Type sum()
+    Type standard()
     {
-        return x + y;
+        return std::abs(x) + std::abs(y);
     }
 
     /////////////////////////////////////////////////
@@ -258,12 +258,9 @@ std::vector<Vector2<int64_t>> definer(std::vector<std::string> inputs)
 }
 
 /////////////////////////////////////////////////
-Vector2<int64_t> closest_intersection(std::array<std::vector<std::string>, 2> wires)
+std::vector<Vector2<int64_t>> intersections(std::vector<Vector2<int64_t>>& first_wire, std::vector<Vector2<int64_t>>& second_wire)
 {
-    Vector2<int64_t> closest_wire = {0, 0};
-
-    auto&& first_wire = definer(wires.front());
-    auto&& second_wire = definer(wires.back());
+    std::vector<Vector2<int64_t>> intersection_points;
 
     for(auto first_wire_point: first_wire)
     {
@@ -271,15 +268,56 @@ Vector2<int64_t> closest_intersection(std::array<std::vector<std::string>, 2> wi
         {
             if(first_wire_point == second_wire_point)
             {
-                if((closest_wire.x == 0 && closest_wire.y == 0) || (std::abs(first_wire_point.x) + std::abs(first_wire_point.y) < closest_wire.x + closest_wire.y))
-                {
-                    closest_wire = {std::abs(first_wire_point.x), std::abs(first_wire_point.y)};
-                }
+                intersection_points.push_back(first_wire_point);
             }
         }
     }
 
+    return intersection_points;
+}
+
+/////////////////////////////////////////////////
+Vector2<int64_t> closest_intersection(std::array<std::vector<std::string>, 2> wires)
+{
+    Vector2<int64_t> closest_wire = {0, 0};
+
+    auto&& first_wire = definer(wires[0]);
+    auto&& second_wire = definer(wires[1]);
+
+    auto&& intersection_points = intersections(first_wire, second_wire);
+
+    for(auto intersection: intersection_points)
+    {
+        if((closest_wire.x == 0 && closest_wire.y == 0) || (std::abs(intersection.x) + std::abs(intersection.y) < closest_wire.standard()))
+        {
+            closest_wire = {std::abs(intersection.x), std::abs(intersection.y)};
+        }
+    }
+
     return closest_wire;
+}
+
+/////////////////////////////////////////////////
+Vector2<int64_t> fewest_combined_steps(std::array<std::vector<std::string>, 2> wires)
+{
+    auto&& first_wire = definer(wires[0]);
+    auto&& second_wire = definer(wires[1]);
+
+    auto&& intersection_points = intersections(first_wire, second_wire);
+
+    Vector2<int64_t> fewest = {int64_t(first_wire.size()), int64_t(second_wire.size())};
+
+    for(auto intersection: intersection_points)
+    {
+        Vector2<int64_t> step = {std::distance(first_wire.begin(), std::find(first_wire.begin(), first_wire.end(), intersection)) + 1, std::distance(second_wire.begin(), std::find(second_wire.begin(), second_wire.end(), intersection)) + 1};
+
+        if(step.standard() < fewest.standard())
+        {
+            fewest = step;
+        }
+    }
+
+    return fewest;
 }
 
 /////////////////////////////////////////////////
@@ -316,7 +354,8 @@ int main()
     answers.push_back(fuel::total_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
     answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/02-program_integers.txt"), {12, 2}));
     answers.push_back(intcode::instruction_solver(get_input_list<int64_t>("inputs/02-program_integers.txt"), 19690720));
-    answers.push_back("takes too long to execute so I comment"/*wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).sum()*/);
+    answers.push_back(wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).standard());
+    answers.push_back(wire_line::fewest_combined_steps(wire_line::input_list("inputs/03-wire-maps.txt")).standard());
 
     std::ofstream writer("output.txt");
     for(uint16_t part = 0; part < answers.size(); ++part)
@@ -324,7 +363,7 @@ int main()
         std::visit([&part, &writer](auto&& answer)
         {
             std::stringstream output;
-            output << "Part " << part + 1 << ": " << answer;
+            output << "Part " << std::floor(part / 2) + 1 << '.' << part % 2 << ": " << answer;
 
             std::cout << output.str() << std::endl;
 
