@@ -38,6 +38,17 @@ std::vector<Type> get_input_list(std::filesystem::path path)
 }
 
 /////////////////////////////////////////////////
+/// \brief Struct representing instructions for
+/// an Intcode program
+///
+/////////////////////////////////////////////////
+struct Sentence
+{
+    int64_t noun = 0;
+    int64_t verb = 0;
+};
+
+/////////////////////////////////////////////////
 // Challenges
 /////////////////////////////////////////////////
 int64_t fuel_calculator(int64_t mass)
@@ -119,13 +130,32 @@ std::vector<int64_t> intcode_program_translater(std::vector<int64_t> inputs)
 }
 
 /////////////////////////////////////////////////
-int64_t two_thousand_and_twelwe_program_alert(std::vector<int64_t> inputs)
+int64_t intcode_program_caller(std::vector<int64_t> inputs, Sentence instructions)
 {
     //Initialization
-    inputs[1] = 12;
-    inputs[2] = 2;
+    inputs[1] = instructions.noun;
+    inputs[2] = instructions.verb;
 
     return intcode_program_translater(inputs)[0];
+}
+
+/////////////////////////////////////////////////
+int64_t intcode_instruction_solver(std::vector<int64_t> inputs, int64_t code)
+{
+    Sentence instructions;
+
+    for(instructions.noun = 0; instructions.noun <= 99; instructions.noun++)
+    {
+        for(instructions.verb = 0; instructions.verb <= 99; instructions.verb++)
+        {
+            if(intcode_program_caller(inputs, instructions) == code)
+            {
+                return 100 * instructions.noun + instructions.verb;
+            }
+        }
+    }
+
+    return 0;
 }
 
 /////////////////////////////////////////////////
@@ -137,7 +167,9 @@ int main()
 
     answers.push_back(fuel_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
     answers.push_back(total_fuel_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
-    answers.push_back(two_thousand_and_twelwe_program_alert(get_input_list<int64_t>("inputs/02-program_integers.txt")));
+    answers.push_back(intcode_program_caller(get_input_list<int64_t>("inputs/02-program_integers.txt"), {12, 2}));
+    answers.push_back(intcode_instruction_solver(get_input_list<int64_t>("inputs/02-program_integers.txt"), 19690720));
+
 
     std::ofstream writer("output.txt");
     for(uint16_t day = 0; day < answers.size(); ++day)
