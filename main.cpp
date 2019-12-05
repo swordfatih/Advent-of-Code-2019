@@ -158,40 +158,300 @@ int64_t total_requirement(std::vector<int64_t> inputs)
 namespace intcode
 {
 /////////////////////////////////////////////////
-std::vector<int64_t> program_translater(std::vector<int64_t> inputs)
+std::vector<int64_t> program_translater(std::vector<int64_t> inputs, Sentence instructions = {})
 {
     int64_t read_position = 0;
+    int64_t diagnostic_code = 0;
 
     bool done = false;
     while(!done)
     {
-        if(inputs[read_position] == 1)
+        std::string instruction = std::to_string(inputs[read_position]);
+
+        int64_t opcode = 0;
+
+        struct Modes
         {
-            inputs[inputs[read_position + 3]] = inputs[inputs[read_position + 1]] + inputs[inputs[read_position + 2]];
+            int64_t first = 0;
+            int64_t second = 0;
+            int64_t third = 0;
+        } modes;
+
+        if(instruction.size() <= 2)
+        {
+            opcode = std::stoi(instruction);
         }
-        else if(inputs[read_position] == 2)
+        else
         {
-            inputs[inputs[read_position + 3]] = inputs[inputs[read_position + 1]] * inputs[inputs[read_position + 2]];
-        }
-        else if(inputs[read_position] == 99)
-        {
-            done = true;
+            opcode = std::stoi(instruction.substr(instruction.size() - 2, 2));
+
+            if(instruction.size() >= 3)
+            {
+                modes.first = instruction[instruction.size() - 3] - '0';
+            }
+
+            if(instruction.size() >= 4)
+            {
+                modes.second = instruction[instruction.size() - 4] - '0';
+            }
+
+            if(instruction.size() >= 5)
+            {
+                modes.third = instruction[instruction.size() - 5] - '0';
+            }
         }
 
-        read_position += 4;
+        int64_t incrementer = 0;
+
+        switch(opcode)
+        {
+        case 1:
+        {
+            Vector2<int64_t> values;
+
+            if(modes.first == 0)
+            {
+                values.x = inputs[inputs[read_position + 1]];
+            }
+            else
+            {
+                values.x = inputs[read_position + 1];
+            }
+
+            if(modes.second == 0)
+            {
+                values.y = inputs[inputs[read_position + 2]];
+            }
+            else
+            {
+                values.y = inputs[read_position + 2];
+            }
+
+            inputs[inputs[read_position + 3]] = values.x + values.y;
+            incrementer = 4;
+            break;
+        }
+
+        case 2:
+        {
+            Vector2<int64_t> values;
+
+            if(modes.first == 0)
+            {
+                values.x = inputs[inputs[read_position + 1]];
+            }
+            else
+            {
+                values.x = inputs[read_position + 1];
+            }
+
+            if(modes.second == 0)
+            {
+                values.y = inputs[inputs[read_position + 2]];
+            }
+            else
+            {
+                values.y = inputs[read_position + 2];
+            }
+
+            inputs[inputs[read_position + 3]] = values.x * values.y;
+            incrementer = 4;
+            break;
+        }
+
+        case 3:
+        {
+            inputs[inputs[read_position + 1]] = instructions.noun;
+
+            incrementer = 2;
+
+            break;
+        }
+
+        case 4:
+        {
+            int64_t read_address = 0;
+
+            if(modes.first == 0)
+            {
+                read_address = inputs[read_position + 1];
+            }
+            else
+            {
+                read_address = read_position + 1;
+            }
+
+            diagnostic_code = inputs[read_address];
+
+            incrementer = 2;
+            break;
+        }
+
+        case 5:
+        {
+            Vector2<int64_t> values;
+
+            if(modes.first == 0)
+            {
+                values.x = inputs[inputs[read_position + 1]];
+            }
+            else
+            {
+                values.x = inputs[read_position + 1];
+            }
+
+            if(values.x != 0)
+            {
+                if(modes.second == 0)
+                {
+                    values.y = inputs[inputs[read_position + 2]];
+                }
+                else
+                {
+                    values.y = inputs[read_position + 2];
+                }
+
+                read_position = values.y;
+            }
+            else
+            {
+                incrementer = 3;
+            }
+
+            break;
+        }
+
+        case 6:
+        {
+
+            Vector2<int64_t> values;
+
+            if(modes.first == 0)
+            {
+                values.x = inputs[inputs[read_position + 1]];
+            }
+            else
+            {
+                values.x = inputs[read_position + 1];
+            }
+
+            if(values.x == 0)
+            {
+                if(modes.second == 0)
+                {
+                    values.y = inputs[inputs[read_position + 2]];
+                }
+                else
+                {
+                    values.y = inputs[read_position + 2];
+                }
+
+                read_position = values.y;
+            }
+            else
+            {
+                incrementer = 3;
+            }
+
+            break;
+        }
+
+        case 7:
+        {
+            Vector2<int64_t> values;
+
+            if(modes.first == 0)
+            {
+                values.x = inputs[inputs[read_position + 1]];
+            }
+            else
+            {
+                values.x = inputs[read_position + 1];
+            }
+
+            if(modes.second == 0)
+            {
+                values.y = inputs[inputs[read_position + 2]];
+            }
+            else
+            {
+                values.y = inputs[read_position + 2];
+            }
+
+            if(values.x < values.y)
+            {
+                inputs[inputs[read_position + 3]] = 1;
+            }
+            else
+            {
+                inputs[inputs[read_position + 3]] = 0;
+            }
+
+            incrementer = 4;
+            break;
+        }
+
+        case 8:
+        {
+            Vector2<int64_t> values;
+
+            if(modes.first == 0)
+            {
+                values.x = inputs[inputs[read_position + 1]];
+            }
+            else
+            {
+                values.x = inputs[read_position + 1];
+            }
+
+            if(modes.second == 0)
+            {
+                values.y = inputs[inputs[read_position + 2]];
+            }
+            else
+            {
+                values.y = inputs[read_position + 2];
+            }
+
+            if(values.x == values.y)
+            {
+                inputs[inputs[read_position + 3]] = 1;
+            }
+            else
+            {
+                inputs[inputs[read_position + 3]] = 0;
+            }
+
+            incrementer = 4;
+            break;
+        }
+
+        default:
+            done = true;
+            break;
+        }
+
+        read_position += incrementer;
     }
+
+    inputs.push_back(diagnostic_code);
 
     return std::move(inputs);
 }
 
 /////////////////////////////////////////////////
-int64_t program_caller(std::vector<int64_t> inputs, Sentence instructions)
+Vector2<int64_t> program_caller(std::vector<int64_t> inputs, Sentence instructions)
 {
     //Initialization
-    inputs[1] = instructions.noun;
-    inputs[2] = instructions.verb;
+    if(inputs[0] != 3)
+    {
+        inputs[1] = instructions.noun;
+        inputs[2] = instructions.verb;
+    }
 
-    return program_translater(inputs)[0];
+    inputs = program_translater(inputs, instructions);
+
+    return {inputs.front(), inputs.back()};
 }
 
 /////////////////////////////////////////////////
@@ -203,7 +463,7 @@ int64_t instruction_solver(std::vector<int64_t> inputs, int64_t code)
     {
         for(instructions.verb = 0; instructions.verb <= 99; ++instructions.verb)
         {
-            if(program_caller(inputs, instructions) == code)
+            if(program_caller(inputs, instructions).x == code)
             {
                 return 100 * instructions.noun + instructions.verb;
             }
@@ -453,12 +713,14 @@ int main()
 
     answers.push_back(fuel::requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
     answers.push_back(fuel::total_requirement(get_input_list<int64_t>("inputs/01-mass_input.txt")));
-    answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/02-program_integers.txt"), {12, 2}));
+    answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/02-program_integers.txt"), {12, 2}).x);
     answers.push_back(intcode::instruction_solver(get_input_list<int64_t>("inputs/02-program_integers.txt"), 19690720));
     answers.push_back("too long"/*wire_line::closest_intersection(wire_line::input_list("inputs/03-wire-maps.txt")).standard()*/);
     answers.push_back("too long"/*wire_line::fewest_combined_steps(wire_line::input_list("inputs/03-wire-maps.txt")).standard()*/);
     answers.push_back(password::criteria_count({372304, 847060}));
     answers.push_back(password::group_criteria_count({372304, 847060}));
+    answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/05-program_integers.txt"), {1, 0}).y);
+    answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/05-program_integers.txt"), {5, 0}).y);
 
     std::ofstream writer("output.txt");
     for(uint16_t part = 0; part < answers.size(); ++part)
