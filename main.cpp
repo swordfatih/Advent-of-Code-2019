@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <cmath>
 #include <variant>
+#include <map>
 
 /////////////////////////////////////////////////
 // Helpers
@@ -705,6 +706,47 @@ int64_t group_criteria_count(Vector2<int64_t> range)
 } // namespace password
 
 /////////////////////////////////////////////////
+namespace orbit
+{
+/////////////////////////////////////////////////
+int64_t deep_relation_count(std::map<std::string, std::vector<std::string>>& orbital_relationships, std::string object)
+{
+    int64_t count = orbital_relationships[object].size();
+
+    for(auto orbit: orbital_relationships[object])
+    {
+        count += deep_relation_count(orbital_relationships, orbit);
+    }
+
+    return count;
+}
+
+/////////////////////////////////////////////////
+int64_t total_count(std::vector<std::string> inputs)
+{
+    std::map<std::string, std::vector<std::string>> orbital_relationships;
+
+    for(auto input: inputs)
+    {
+        std::string base_object = input.substr(0, 3);
+        std::string orbiter_object = input.substr(4, 7);
+
+        orbital_relationships[base_object].push_back(orbiter_object);
+    }
+
+    int64_t count = 0;
+
+    for(auto& [object, relationships]: orbital_relationships)
+    {
+        count += deep_relation_count(orbital_relationships, object);
+    }
+
+    return count;
+}
+
+} // namespace orbit
+
+/////////////////////////////////////////////////
 // Main stream
 /////////////////////////////////////////////////
 int main()
@@ -721,6 +763,7 @@ int main()
     answers.push_back(password::group_criteria_count({372304, 847060}));
     answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/05-program_integers.txt"), {1, 0}).y);
     answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/05-program_integers.txt"), {5, 0}).y);
+    answers.push_back(orbit::total_count(get_input_list<std::string>("inputs/06-orbit-map.txt")));
 
     std::ofstream writer("output.txt");
     for(uint16_t part = 0; part < answers.size(); ++part)
