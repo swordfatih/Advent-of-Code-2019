@@ -744,6 +744,68 @@ int64_t total_count(std::vector<std::string> inputs)
     return count;
 }
 
+/////////////////////////////////////////////////
+std::string family_tree(std::map<std::string, std::vector<std::string>>& orbital_relationships, std::string orbit)
+{
+    std::string tree = orbit;
+
+    for(auto& [object, relationships]: orbital_relationships)
+    {
+        if(std::find(relationships.begin(), relationships.end(), orbit) != relationships.end())
+        {
+            tree += family_tree(orbital_relationships, object);
+        }
+    }
+
+    return tree;
+}
+
+/////////////////////////////////////////////////
+int64_t transfer_count(std::vector<std::string> inputs)
+{
+    std::map<std::string, std::vector<std::string>> orbital_relationships;
+
+    for(auto input: inputs)
+    {
+        std::string base_object = input.substr(0, 3);
+        std::string orbiter_object = input.substr(4, 7);
+
+        orbital_relationships[base_object].push_back(orbiter_object);
+    }
+
+    std::string santa_tree = family_tree(orbital_relationships, "SAN");
+    santa_tree.erase(0, 3);
+
+    std::string you_tree = family_tree(orbital_relationships, "YOU");
+    you_tree.erase(0, 3);
+
+    std::string common_object;
+
+    for(size_t position = 0; position < santa_tree.size(); position += 3)
+    {
+        std::string object({santa_tree[position], santa_tree[position + 1], santa_tree[position + 2]});
+
+        size_t common_object_position = 0;
+
+        common_object_position = you_tree.find(object, common_object_position);
+        if(common_object_position != std::string::npos)
+        {
+            common_object = object;
+
+            if(common_object_position % 3 == 0)
+            {
+                break;
+            }
+            else
+            {
+                continue;
+            }
+        }
+    }
+
+    return (santa_tree.substr(0, santa_tree.find(common_object)).size() + you_tree.substr(0, you_tree.find(common_object)).size()) / 3;
+}
+
 } // namespace orbit
 
 /////////////////////////////////////////////////
@@ -764,6 +826,7 @@ int main()
     answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/05-program_integers.txt"), {1, 0}).y);
     answers.push_back(intcode::program_caller(get_input_list<int64_t>("inputs/05-program_integers.txt"), {5, 0}).y);
     answers.push_back(orbit::total_count(get_input_list<std::string>("inputs/06-orbit-map.txt")));
+    answers.push_back(orbit::transfer_count(get_input_list<std::string>("inputs/06-orbit-map.txt")));
 
     std::ofstream writer("output.txt");
     for(uint16_t part = 0; part < answers.size(); ++part)
